@@ -1,0 +1,15 @@
+.topbar-appBar {
+  height: 60px;
+  justify-content: center;
+}
+
+.app-title {
+  text-decoration: none;
+  color: white;
+  font-weight: 500;
+}
+
+.context-info {
+  color: white;
+  margin-left: auto;
+}

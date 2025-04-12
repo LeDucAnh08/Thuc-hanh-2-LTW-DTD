@@ -1,0 +1,11 @@
+.main-topbar-buffer {
+  margin-top: 70px;
+}
+
+.main-grid-item {
+  min-height: calc(100vh - 85px);
+  height: auto;
+  padding: 16px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Card,
   CardContent,
@@ -8,24 +8,24 @@ import {
   IconButton,
   Container,
   Divider,
-} from '@mui/material';
+} from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
   ArrowForward as ArrowForwardIcon,
-} from '@mui/icons-material';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+} from "@mui/icons-material";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
-import './styles.css';
-import models from '../../modelData/models';
+import "./styles.css";
+import models from "../../modelData/models";
 
 function PhotoViewer() {
   const { userId, photoId } = useParams();
   const navigate = useNavigate();
-  
+
   // Get all photos for the user
   const photos = models.photoOfUserModel(userId);
   const user = models.userModel(userId);
-  
+
   if (!photos || photos.length === 0 || !user) {
     return (
       <Container>
@@ -37,7 +37,7 @@ function PhotoViewer() {
   }
 
   // Find current photo index
-  const currentPhotoIndex = photos.findIndex(photo => photo._id === photoId);
+  const currentPhotoIndex = photos.findIndex((photo) => photo._id === photoId);
   const currentPhoto = photos[currentPhotoIndex];
 
   if (currentPhotoIndex === -1 || !currentPhoto) {
@@ -52,14 +52,14 @@ function PhotoViewer() {
 
   // Format date string to a user-friendly format
   const formatDate = (dateString) => {
-    const options = { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    const options = {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     };
-    return new Date(dateString).toLocaleDateString('en-US', options);
+    return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
   // Handle navigation between photos
@@ -80,7 +80,7 @@ function PhotoViewer() {
 
       <Card elevation={2} className="photo-card">
         <Box className="stepper-container">
-          <IconButton 
+          <IconButton
             onClick={() => handleNavigate(-1)}
             disabled={currentPhotoIndex === 0}
             size="large"
@@ -95,7 +95,7 @@ function PhotoViewer() {
             alt={`Photo by ${user.first_name}`}
           />
 
-          <IconButton 
+          <IconButton
             onClick={() => handleNavigate(1)}
             disabled={currentPhotoIndex === photos.length - 1}
             size="large"
@@ -126,7 +126,10 @@ function PhotoViewer() {
                     <Typography variant="h6" component="div">
                       <Link
                         to={`/users/${comment.user._id}`}
-                        style={{ textDecoration: 'none', color: 'primary.main' }}
+                        style={{
+                          textDecoration: "none",
+                          color: "primary.main",
+                        }}
                       >
                         {comment.user.first_name} {comment.user.last_name}
                       </Link>
@@ -134,7 +137,7 @@ function PhotoViewer() {
                     <Typography
                       variant="body1"
                       sx={{
-                        fontSize: '1.1rem',
+                        fontSize: "1.1rem",
                         my: 1,
                       }}
                     >
@@ -159,4 +162,4 @@ function PhotoViewer() {
   );
 }
 
-export default PhotoViewer; 
+export default PhotoViewer;

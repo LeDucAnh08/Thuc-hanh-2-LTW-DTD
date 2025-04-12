@@ -1,13 +1,13 @@
 import React from "react";
-import { 
-  Typography, 
-  Card, 
-  CardContent, 
-  CardMedia, 
+import {
+  Typography,
+  Card,
+  CardContent,
+  CardMedia,
   Divider,
   Grid,
   Container,
-  Box
+  Box,
 } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import { useFeatures } from "../../context/FeatureContext";
@@ -46,14 +46,14 @@ function UserPhotos() {
 
   // Format date string to a user-friendly format
   const formatDate = (dateString) => {
-    const options = { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    const options = {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     };
-    return new Date(dateString).toLocaleDateString('en-US', options);
+    return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
   return (
@@ -63,7 +63,7 @@ function UserPhotos() {
           Photos of {user.first_name} {user.last_name}
         </Typography>
       </Box>
-      
+
       <Grid container spacing={4}>
         {photos.map((photo) => (
           <Grid item xs={12} key={photo._id}>
@@ -80,29 +80,32 @@ function UserPhotos() {
                     Posted on: {formatDate(photo.date_time)}
                   </Typography>
                 </Box>
-                
+
                 <Box mb={2}>
                   <Typography variant="h6" gutterBottom>
                     Comments
                   </Typography>
-                  
+
                   {photo.comments && photo.comments.length > 0 ? (
                     <div className="comments-section">
                       {photo.comments.map((comment) => (
                         <Box key={comment._id} className="comment" mb={2}>
                           <Typography variant="h6" component="div">
-                            <Link 
+                            <Link
                               to={`/users/${comment.user._id}`}
-                              style={{ textDecoration: 'none', color: 'primary.main' }}
+                              style={{
+                                textDecoration: "none",
+                                color: "primary.main",
+                              }}
                             >
                               {comment.user.first_name} {comment.user.last_name}
                             </Link>
                           </Typography>
-                          <Typography 
-                            variant="body1" 
-                            sx={{ 
-                              fontSize: '1.1rem',
-                              my: 1
+                          <Typography
+                            variant="body1"
+                            sx={{
+                              fontSize: "1.1rem",
+                              my: 1,
                             }}
                           >
                             {comment.comment}

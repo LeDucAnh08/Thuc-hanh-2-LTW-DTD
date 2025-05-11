@@ -9,6 +9,7 @@ import UserDetail from "./components/UserDetail";
 import UserList from "./components/UserList";
 import UserPhotos from "./components/UserPhotos";
 import PhotoViewer from "./components/PhotoViewer";
+import UserComments from "./components/UserComments";
 import { FeatureProvider, useFeatures } from "./context/FeatureContext";
 
 const MainContent = () => {
@@ -39,6 +40,10 @@ const MainContent = () => {
             <Route
               path="/photos/:userId/:photoId"
               element={advancedFeaturesEnabled ? <PhotoViewer /> : <UserPhotos />}
+            />
+            <Route 
+              path="/comments/:userId" 
+              element={<UserComments />} 
             />
             <Route path="/users" element={<UserList />} />
             <Route path="/" element={<UserList />} />

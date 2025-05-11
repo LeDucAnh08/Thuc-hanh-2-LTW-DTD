@@ -1,0 +1,25 @@
+.user-comments {
+  padding: 24px 0;
+}
+
+.comment-card {
+  margin-bottom: 16px;
+  transition: transform 0.2s ease;
+}
+
+.comment-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.comment-photo-thumbnail {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  max-height: 150px;
+}
+
+.comment-text {
+  font-size: 1.1rem;
+  margin-top: 8px;
+} 

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -8,6 +8,7 @@ import {
   IconButton,
   Container,
   Divider,
+  CircularProgress
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
@@ -16,15 +17,52 @@ import {
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 import "./styles.css";
-import models from "../../modelData/models";
+import fetchModel from "../../lib/fetchModelData";
 
 function PhotoViewer() {
   const { userId, photoId } = useParams();
   const navigate = useNavigate();
+  const [photos, setPhotos] = useState([]);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Get all photos for the user
-  const photos = models.photoOfUserModel(userId);
-  const user = models.userModel(userId);
+  useEffect(() => {
+    setLoading(true);
+    // Fetch photos
+    fetchModel(`/photosOfUser/${userId}`)
+      .then(data => {
+        setPhotos(data);
+        return fetchModel(`/user/${userId}`);
+      })
+      .then(userData => {
+        setUser(userData);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error("Error fetching photo data:", error);
+        setError("Failed to load photo data. Please try again later.");
+        setLoading(false);
+      });
+  }, [userId]);
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container>
+        <Typography variant="h5" color="error">
+          {error}
+        </Typography>
+      </Container>
+    );
+  }
 
   if (!photos || photos.length === 0 || !user) {
     return (

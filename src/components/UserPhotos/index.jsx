@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Typography,
   Card,
@@ -8,14 +8,14 @@ import {
   Grid,
   Container,
   Box,
+  CircularProgress
 } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import { useFeatures } from "../../context/FeatureContext";
-import { useEffect } from "react";
 
 import "./styles.css";
 import { useParams } from "react-router-dom";
-import models from "../../modelData/models";
+import fetchModel from "../../lib/fetchModelData";
 
 /**
  * Define UserPhotos, a React component of Project 4.
@@ -24,8 +24,29 @@ function UserPhotos() {
   const { userId } = useParams();
   const navigate = useNavigate();
   const { advancedFeaturesEnabled } = useFeatures();
-  const photos = models.photoOfUserModel(userId);
-  const user = models.userModel(userId);
+  const [photos, setPhotos] = useState([]);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    setLoading(true);
+    // Fetch photos
+    fetchModel(`/photosOfUser/${userId}`)
+      .then(data => {
+        setPhotos(data);
+        return fetchModel(`/user/${userId}`);
+      })
+      .then(userData => {
+        setUser(userData);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error("Error fetching photos:", error);
+        setError("Failed to load photos. Please try again later.");
+        setLoading(false);
+      });
+  }, [userId]);
 
   // If advanced features are enabled, redirect to the first photo
   useEffect(() => {
@@ -34,11 +55,39 @@ function UserPhotos() {
     }
   }, [advancedFeaturesEnabled, userId, photos, navigate]);
 
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container className="user-photos">
+        <Typography variant="h5" color="error">
+          {error}
+        </Typography>
+      </Container>
+    );
+  }
+
   if (!photos || photos.length === 0) {
     return (
       <Container className="user-photos">
         <Typography variant="h5" color="text.secondary">
           No photos found for this user
+        </Typography>
+      </Container>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Container className="user-photos">
+        <Typography variant="h5" color="text.secondary">
+          User not found
         </Typography>
       </Container>
     );

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Divider,
   List,
@@ -6,23 +6,56 @@ import {
   ListItemText,
   Typography,
   Box,
-  ListItemButton
+  ListItemButton,
+  CircularProgress
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 import "./styles.css";
-import models from "../../modelData/models";
+import fetchModel from "../../lib/fetchModelData";
 
 /**
  * Define UserList, a React component of Project 4.
  */
 function UserList() {
-  const users = models.userListModel();
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setLoading(true);
+    fetchModel("/user/list")
+      .then(data => {
+        setUsers(data);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error("Error fetching user list:", error);
+        setError("Failed to load users. Please try again later.");
+        setLoading(false);
+      });
+  }, []);
 
   const handleUserClick = (userId) => {
     navigate(`/users/${userId}`);
   };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box p={2}>
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box className="user-list">

@@ -1,17 +1,49 @@
-import React from "react";
-import { Typography, Button, Card, CardContent, CardActions } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Typography, Button, Card, CardContent, CardActions, CircularProgress, Box } from "@mui/material";
 import { Link } from "react-router-dom";
 
 import "./styles.css";
 import { useParams } from "react-router-dom";
-import models from "../../modelData/models";
+import fetchModel from "../../lib/fetchModelData";
 
 /**
  * Define UserDetail, a React component of Project 4.
  */
 function UserDetail() {
   const { userId } = useParams();
-  const user = models.userModel(userId);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchModel(`/user/${userId}`)
+      .then(data => {
+        setUser(data);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error("Error fetching user details:", error);
+        setError("Failed to load user details. Please try again later.");
+        setLoading(false);
+      });
+  }, [userId]);
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box p={2}>
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+  }
 
   if (!user) {
     return <Typography variant="h5">User not found</Typography>;

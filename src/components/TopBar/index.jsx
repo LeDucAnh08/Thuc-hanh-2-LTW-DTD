@@ -8,6 +8,7 @@ import {
   Checkbox,
   Button
 } from "@mui/material";
+import { PhotoCamera } from "@mui/icons-material";
 import { Link, useLocation } from "react-router-dom";
 
 import "./styles.css";
@@ -18,7 +19,7 @@ import { postModel } from "../../lib/fetchModelData";
 /**
  * Define TopBar, a React component of Project 4.
  */
-function TopBar({ user, onLogout }) {
+function TopBar({ user, onLogout, onAddPhotoClick }) {
   const location = useLocation();
   const { advancedFeaturesEnabled, toggleAdvancedFeatures } = useFeatures();
   
@@ -103,6 +104,23 @@ function TopBar({ user, onLogout }) {
                 <Typography variant="body1" color="inherit">
                   Hi {user.first_name}
                 </Typography>
+                <Button 
+                  color="inherit" 
+                  variant="outlined"
+                  size="small"
+                  startIcon={<PhotoCamera />}
+                  onClick={onAddPhotoClick}
+                  sx={{ 
+                    borderColor: 'rgba(76, 175, 80, 0.7)',
+                    color: 'rgba(76, 175, 80, 1)',
+                    '&:hover': {
+                      borderColor: 'rgba(76, 175, 80, 1)',
+                      backgroundColor: 'rgba(76, 175, 80, 0.1)'
+                    }
+                  }}
+                >
+                  UPLOAD
+                </Button>
                 <Button 
                   color="inherit" 
                   variant="outlined"

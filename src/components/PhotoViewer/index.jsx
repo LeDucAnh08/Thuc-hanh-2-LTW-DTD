@@ -28,6 +28,49 @@ function PhotoViewer({ currentUser }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Backend server URL - adjust this based on your backend configuration
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+
+  // Function to get the correct image URL with fallback logic
+  const getImageUrl = (fileName) => {
+    // Check if it's a new uploaded image (usually has UUID format)
+    const isUUIDFormat = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(fileName);
+    
+    if (isUUIDFormat) {
+      // New uploaded images are from backend server
+      return `${BACKEND_URL}/images/${fileName}`;
+    } else {
+      // Old images are from frontend public folder
+      return `${process.env.PUBLIC_URL}/images/${fileName}`;
+    }
+  };
+
+  // Handle image load error with fallback
+  const handleImageError = (e, fileName) => {
+    const currentSrc = e.target.src;
+    const backendUrl = `${BACKEND_URL}/images/${fileName}`;
+    const frontendUrl = `${process.env.PUBLIC_URL}/images/${fileName}`;
+    
+    console.error('Failed to load image from:', currentSrc);
+    
+    // Try the other source if current one fails
+    if (currentSrc.includes('localhost:3001')) {
+      // If backend failed, try frontend
+      console.log('Trying frontend URL:', frontendUrl);
+      e.target.src = frontendUrl;
+    } else {
+      // If frontend failed, try backend
+      console.log('Trying backend URL:', backendUrl);
+      e.target.src = backendUrl;
+    }
+    
+    // If both fail, hide the image
+    e.target.onerror = () => {
+      console.error('Both image sources failed for:', fileName);
+      e.target.style.display = 'none';
+    };
+  };
+
   useEffect(() => {
     setLoading(true);
     // Fetch photos
@@ -141,8 +184,9 @@ function PhotoViewer({ currentUser }) {
           <CardMedia
             component="img"
             className="photo-image"
-            image={`${process.env.PUBLIC_URL}/images/${currentPhoto.file_name}`}
+            image={getImageUrl(currentPhoto.file_name)}
             alt={`Photo by ${user.first_name}`}
+            onError={(e) => handleImageError(e, currentPhoto.file_name)}
           />
 
           <IconButton

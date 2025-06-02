@@ -1,0 +1,31 @@
+/* PhotoUpload Component Styles */
+
+.photo-upload-dialog .MuiDialog-paper {
+  border-radius: 12px;
+  max-width: 600px;
+}
+
+/* File input label styling */
+.photo-upload-file-label {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.photo-upload-file-label:hover {
+  transform: translateY(-2px);
+}
+
+/* Preview image container */
+.photo-preview-container {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.photo-preview-image {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  object-fit: contain;
+} 

@@ -18,8 +18,9 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 
 import "./styles.css";
 import fetchModel from "../../lib/fetchModelData";
+import CommentInput from "../CommentInput";
 
-function PhotoViewer() {
+function PhotoViewer({ currentUser }) {
   const { userId, photoId } = useParams();
   const navigate = useNavigate();
   const [photos, setPhotos] = useState([]);
@@ -45,6 +46,17 @@ function PhotoViewer() {
         setLoading(false);
       });
   }, [userId]);
+
+  // Handle adding a new comment to the current photo
+  const handleCommentAdded = (newComment) => {
+    setPhotos(prevPhotos => 
+      prevPhotos.map(photo => 
+        photo._id === photoId 
+          ? { ...photo, comments: [...photo.comments, newComment] }
+          : photo
+      )
+    );
+  };
 
   if (loading) {
     return (
@@ -154,7 +166,7 @@ function PhotoViewer() {
 
           <Box mb={2}>
             <Typography variant="h6" gutterBottom>
-              Comments
+              Comments ({currentPhoto.comments ? currentPhoto.comments.length : 0})
             </Typography>
 
             {currentPhoto.comments && currentPhoto.comments.length > 0 ? (
@@ -189,11 +201,20 @@ function PhotoViewer() {
                 ))}
               </div>
             ) : (
-              <Typography variant="body2" color="text.secondary">
-                No comments on this photo
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                No comments on this photo yet. Be the first to comment!
               </Typography>
             )}
           </Box>
+
+          {/* Comment Input Section */}
+          {currentUser && (
+            <CommentInput
+              photoId={currentPhoto._id}
+              currentUser={currentUser}
+              onCommentAdded={handleCommentAdded}
+            />
+          )}
         </CardContent>
       </Card>
     </Container>

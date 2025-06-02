@@ -1,7 +1,7 @@
 import './App.css';
 
-import React from "react";
-import { Grid, Typography, Paper } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Grid, Typography, Paper, Box, CircularProgress } from "@mui/material";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
 import TopBar from "./components/TopBar";
@@ -10,15 +10,21 @@ import UserList from "./components/UserList";
 import UserPhotos from "./components/UserPhotos";
 import PhotoViewer from "./components/PhotoViewer";
 import UserComments from "./components/UserComments";
+import LoginRegister from "./components/LoginRegister";
 import { FeatureProvider, useFeatures } from "./context/FeatureContext";
+import { fetchModel } from "./lib/fetchModelData";
 
-const MainContent = () => {
+const MainContent = ({ user, onLogout }) => {
   const { advancedFeaturesEnabled } = useFeatures();
+
+  if (!user) {
+    return null; // LoginRegister will be shown by App component
+  }
 
   return (
     <Grid container spacing={2}>
       <Grid item xs={12}>
-        <TopBar />
+        <TopBar user={user} onLogout={onLogout} />
       </Grid>
       <div className="main-topbar-buffer" />
       <Grid item sm={3}>
@@ -35,11 +41,11 @@ const MainContent = () => {
             />
             <Route
               path="/photos/:userId"
-              element={<UserPhotos />}
+              element={<UserPhotos currentUser={user} />}
             />
             <Route
               path="/photos/:userId/:photoId"
-              element={advancedFeaturesEnabled ? <PhotoViewer /> : <UserPhotos />}
+              element={advancedFeaturesEnabled ? <PhotoViewer currentUser={user} /> : <UserPhotos currentUser={user} />}
             />
             <Route 
               path="/comments/:userId" 
@@ -55,10 +61,59 @@ const MainContent = () => {
 };
 
 const App = () => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Check if user is already logged in on app start
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const sessionData = await fetchModel('/admin/session');
+        if (sessionData.logged_in) {
+          // Get full user data
+          const userData = await fetchModel(`/user/${sessionData.user_id}`);
+          setUser(userData);
+        }
+      } catch (error) {
+        console.log('No active session');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkSession();
+  }, []);
+
+  const handleLogin = (userData) => {
+    setUser(userData);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+  };
+
+  if (loading) {
+    return (
+      <Box 
+        display="flex" 
+        justifyContent="center" 
+        alignItems="center" 
+        minHeight="100vh"
+        sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+      >
+        <CircularProgress size={60} sx={{ color: 'white' }} />
+      </Box>
+    );
+  }
+
   return (
     <Router>
       <FeatureProvider>
-        <MainContent />
+        {user ? (
+          <MainContent user={user} onLogout={handleLogout} />
+        ) : (
+          <LoginRegister onLogin={handleLogin} />
+        )}
       </FeatureProvider>
     </Router>
   );

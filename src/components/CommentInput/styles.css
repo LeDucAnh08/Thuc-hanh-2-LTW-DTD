@@ -1,0 +1,15 @@
+.comment-input-container {
+  margin-top: 16px;
+}
+
+.comment-input-container .MuiTextField-root {
+  background-color: white;
+}
+
+.comment-input-container .MuiButton-root {
+  transition: all 0.2s ease;
+}
+
+.comment-input-container .MuiButton-root:hover {
+  transform: translateY(-1px);
+} 

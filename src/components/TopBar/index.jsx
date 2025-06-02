@@ -5,20 +5,33 @@ import {
   Typography, 
   Box,
   FormControlLabel,
-  Checkbox
+  Checkbox,
+  Button
 } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
 
 import "./styles.css";
 import models from "../../modelData/models";
 import { useFeatures } from "../../context/FeatureContext";
+import { postModel } from "../../lib/fetchModelData";
 
 /**
  * Define TopBar, a React component of Project 4.
  */
-function TopBar() {
+function TopBar({ user, onLogout }) {
   const location = useLocation();
   const { advancedFeaturesEnabled, toggleAdvancedFeatures } = useFeatures();
+  
+  const handleLogout = async () => {
+    try {
+      await postModel('/admin/logout', {});
+      onLogout();
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Even if logout fails on server, clear local state
+      onLogout();
+    }
+  };
   
   // Get context information based on current route
   const getContextInfo = () => {
@@ -83,10 +96,39 @@ function TopBar() {
             />
           </Box>
           
-          {/* Right side - Context Info */}
-          <Typography variant="h6" color="inherit" sx={{ marginLeft: 'auto' }}>
-            {getContextInfo()}
-          </Typography>
+          {/* Right side - User Info and Context */}
+          <Box display="flex" alignItems="center" gap={2} sx={{ marginLeft: 'auto' }}>
+            {user ? (
+              <>
+                <Typography variant="body1" color="inherit">
+                  Hi {user.first_name}
+                </Typography>
+                <Button 
+                  color="inherit" 
+                  variant="outlined"
+                  size="small"
+                  onClick={handleLogout}
+                  sx={{ 
+                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                    '&:hover': {
+                      borderColor: 'white',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                    }
+                  }}
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <Typography variant="body1" color="inherit" sx={{ fontStyle: 'italic' }}>
+                Please Login
+              </Typography>
+            )}
+            
+            <Typography variant="h6" color="inherit">
+              {getContextInfo()}
+            </Typography>
+          </Box>
         </Box>
       </Toolbar>
     </AppBar>

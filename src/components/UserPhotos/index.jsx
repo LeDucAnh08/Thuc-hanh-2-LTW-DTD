@@ -16,11 +16,12 @@ import { useFeatures } from "../../context/FeatureContext";
 import "./styles.css";
 import { useParams } from "react-router-dom";
 import fetchModel from "../../lib/fetchModelData";
+import CommentInput from "../CommentInput";
 
 /**
  * Define UserPhotos, a React component of Project 4.
  */
-function UserPhotos() {
+function UserPhotos({ currentUser }) {
   const { userId } = useParams();
   const navigate = useNavigate();
   const { advancedFeaturesEnabled } = useFeatures();
@@ -54,6 +55,17 @@ function UserPhotos() {
       navigate(`/photos/${userId}/${photos[0]._id}`);
     }
   }, [advancedFeaturesEnabled, userId, photos, navigate]);
+
+  // Handle adding a new comment to a specific photo
+  const handleCommentAdded = (photoId, newComment) => {
+    setPhotos(prevPhotos => 
+      prevPhotos.map(photo => 
+        photo._id === photoId 
+          ? { ...photo, comments: [...photo.comments, newComment] }
+          : photo
+      )
+    );
+  };
 
   if (loading) {
     return (
@@ -132,7 +144,7 @@ function UserPhotos() {
 
                 <Box mb={2}>
                   <Typography variant="h6" gutterBottom>
-                    Comments
+                    Comments ({photo.comments ? photo.comments.length : 0})
                   </Typography>
 
                   {photo.comments && photo.comments.length > 0 ? (
@@ -167,11 +179,20 @@ function UserPhotos() {
                       ))}
                     </div>
                   ) : (
-                    <Typography variant="body2" color="text.secondary">
-                      No comments on this photo
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      No comments on this photo yet. Be the first to comment!
                     </Typography>
                   )}
                 </Box>
+
+                {/* Comment Input Section */}
+                {currentUser && (
+                  <CommentInput
+                    photoId={photo._id}
+                    currentUser={currentUser}
+                    onCommentAdded={(newComment) => handleCommentAdded(photo._id, newComment)}
+                  />
+                )}
               </CardContent>
             </Card>
           </Grid>

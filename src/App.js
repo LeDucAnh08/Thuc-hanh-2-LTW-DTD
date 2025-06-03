@@ -13,7 +13,7 @@ import UserComments from "./components/UserComments";
 import LoginRegister from "./components/LoginRegister";
 import PhotoUpload from "./components/PhotoUpload";
 import { FeatureProvider, useFeatures } from "./context/FeatureContext";
-import { fetchModel } from "./lib/fetchModelData";
+import { fetchModel, getToken, setToken, removeToken } from "./lib/fetchModelData";
 
 const MainContent = ({ user, onLogout }) => {
   const { advancedFeaturesEnabled } = useFeatures();
@@ -38,59 +38,54 @@ const MainContent = ({ user, onLogout }) => {
     setShowPhotoUpload(false);
   };
 
+  const handleLogout = () => {
+    // Clear JWT token
+    removeToken();
+    onLogout();
+  };
+
   if (!user) {
     return null; // LoginRegister will be shown by App component
   }
 
   return (
-    <>
-      <Grid container spacing={2}>
-        <Grid item xs={12}>
-          <TopBar 
-            user={user} 
-            onLogout={onLogout} 
-            onAddPhotoClick={handleAddPhotoClick}
-          />
+    <Box sx={{ flexGrow: 1 }}>
+      <TopBar user={user} onLogout={handleLogout} onAddPhotoClick={handleAddPhotoClick} />
+      <Box sx={{ marginTop: '64px', padding: 3 }}>
+        <Grid container spacing={3}>
+          <Grid item sm={3} md={3}>
+            <Paper elevation={2} sx={{ height: 'fit-content' }}>
+              <UserList />
+            </Paper>
+          </Grid>
+          <Grid item sm={9} md={9}>
+            <Paper elevation={2} sx={{ minHeight: '600px', padding: 2 }}>
+              <Routes>
+                <Route path="/" element={
+                  <Box display="flex" justifyContent="center" alignItems="center" height="400px">
+                    <Typography variant="h4" color="textSecondary">
+                      Select a user from the list to view their details or photos
+                    </Typography>
+                  </Box>
+                } />
+                <Route path="/users/:userId" element={<UserDetail refreshTrigger={refreshTrigger} />} />
+                <Route path="/photos/:userId" element={<UserPhotos refreshTrigger={refreshTrigger} currentUser={user} />} />
+                <Route path="/photos/:userId/:photoId" element={<PhotoViewer currentUser={user} />} />
+                {advancedFeaturesEnabled && (
+                  <Route path="/comments/:userId" element={<UserComments />} />
+                )}
+              </Routes>
+            </Paper>
+          </Grid>
         </Grid>
-        <div className="main-topbar-buffer" />
-        <Grid item sm={3}>
-          <Paper className="main-grid-item">
-            <UserList />
-          </Paper>
-        </Grid>
-        <Grid item sm={9}>
-          <Paper className="main-grid-item">
-            <Routes>
-              <Route
-                path="/users/:userId"
-                element={<UserDetail />}
-              />
-              <Route
-                path="/photos/:userId"
-                element={<UserPhotos currentUser={user} key={refreshTrigger} />}
-              />
-              <Route
-                path="/photos/:userId/:photoId"
-                element={advancedFeaturesEnabled ? <PhotoViewer currentUser={user} /> : <UserPhotos currentUser={user} key={refreshTrigger} />}
-              />
-              <Route 
-                path="/comments/:userId" 
-                element={<UserComments />} 
-              />
-              <Route path="/users" element={<UserList />} />
-              <Route path="/" element={<UserList />} />
-            </Routes>
-          </Paper>
-        </Grid>
-      </Grid>
-
-      {/* Photo Upload Dialog */}
+      </Box>
+      
       <PhotoUpload 
         open={showPhotoUpload}
-        onClose={handlePhotoUploadClose}
         onPhotoUploaded={handlePhotoUploaded}
+        onClose={handlePhotoUploadClose}
       />
-    </>
+    </Box>
   );
 };
 
@@ -102,14 +97,20 @@ const App = () => {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const sessionData = await fetchModel('/admin/session');
-        if (sessionData.logged_in) {
-          // Get full user data
-          const userData = await fetchModel(`/user/${sessionData.user_id}`);
-          setUser(userData);
+        const token = getToken();
+        if (token) {
+          // Try to get session info using existing token
+          const sessionData = await fetchModel('/admin/session');
+          if (sessionData.logged_in) {
+            // Get full user data
+            const userData = await fetchModel(`/user/${sessionData.user_id}`);
+            setUser(userData);
+          }
         }
       } catch (error) {
-        console.log('No active session');
+        console.log('No active session or invalid token');
+        // Clear invalid token
+        removeToken();
       } finally {
         setLoading(false);
       }
@@ -119,10 +120,16 @@ const App = () => {
   }, []);
 
   const handleLogin = (userData) => {
+    // Store JWT token
+    if (userData.token) {
+      setToken(userData.token);
+    }
     setUser(userData);
   };
 
   const handleLogout = () => {
+    // Clear JWT token
+    removeToken();
     setUser(null);
   };
 

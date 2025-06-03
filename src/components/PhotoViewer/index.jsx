@@ -19,17 +19,22 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import "./styles.css";
 import fetchModel from "../../lib/fetchModelData";
 import CommentInput from "../CommentInput";
+import { useFeatures } from "../../context/FeatureContext";
+
+const API_BASE_URL = 'http://localhost:3001';
+// const API_BASE_URL = 'https://lpq7hx-3001.csb.app';
 
 function PhotoViewer({ currentUser }) {
   const { userId, photoId } = useParams();
   const navigate = useNavigate();
+  const { advancedFeaturesEnabled } = useFeatures();
   const [photos, setPhotos] = useState([]);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Backend server URL - adjust this based on your backend configuration
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+  const BACKEND_URL = API_BASE_URL;
 
   // Function to get the correct image URL with fallback logic
   const getImageUrl = (fileName) => {
@@ -54,7 +59,7 @@ function PhotoViewer({ currentUser }) {
     console.error('Failed to load image from:', currentSrc);
     
     // Try the other source if current one fails
-    if (currentSrc.includes('localhost:3001')) {
+    if (currentSrc.includes(API_BASE_URL)) {
       // If backend failed, try frontend
       console.log('Trying frontend URL:', frontendUrl);
       e.target.src = frontendUrl;
@@ -89,6 +94,13 @@ function PhotoViewer({ currentUser }) {
         setLoading(false);
       });
   }, [userId]);
+
+  // Redirect to photos list if advanced features are disabled
+  useEffect(() => {
+    if (!advancedFeaturesEnabled) {
+      navigate(`/photos/${userId}`);
+    }
+  }, [advancedFeaturesEnabled, userId, navigate]);
 
   // Handle adding a new comment to the current photo
   const handleCommentAdded = (newComment) => {

@@ -14,6 +14,7 @@ import {
   Snackbar
 } from '@mui/material';
 import { CloudUpload, CheckCircle } from '@mui/icons-material';
+import { postModelWithFile } from '../../lib/fetchModelData';
 import './styles.css';
 
 function PhotoUpload({ open, onClose, onPhotoUploaded }) {
@@ -70,34 +71,40 @@ function PhotoUpload({ open, onClose, onPhotoUploaded }) {
     setUploadError('');
 
     try {
+      // Debug: Log the API base URL and token
+      console.log('API Base URL:', 'http://localhost:3001');
+      console.log('Has token:', !!localStorage.getItem('jwt_token'));
+      
       const formData = new FormData();
       formData.append('uploadedphoto', selectedFile);
 
-      const response = await fetch('http://localhost:3001/photos/new', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include' // Important for session authentication
-      });
+      console.log('Attempting to upload to:', 'http://localhost:3001/photos/new');
+      const result = await postModelWithFile('/photos/new', formData);
 
-      const result = await response.json();
-
-      if (response.ok) {
-        // Success
-        setShowSuccess(true);
-        setTimeout(() => {
-          setSelectedFile(null);
-          setPreviewUrl(null);
-          if (onPhotoUploaded) {
-            onPhotoUploaded(result.photo);
-          }
-          handleClose();
-        }, 1500); // Show success message for 1.5 seconds
-      } else {
-        setUploadError(result.error || 'Upload failed');
-      }
+      // Success
+      setShowSuccess(true);
+      setTimeout(() => {
+        setSelectedFile(null);
+        setPreviewUrl(null);
+        if (onPhotoUploaded) {
+          onPhotoUploaded(result.photo);
+        }
+        handleClose();
+      }, 1500); // Show success message for 1.5 seconds
     } catch (error) {
-      console.error('Upload error:', error);
-      setUploadError('Network error occurred. Please try again.');
+      console.error('Upload error details:', error);
+      console.error('Error message:', error.message);
+      
+      // More specific error messages
+      if (error.message.includes('Failed to fetch') || error.message.includes('fetch')) {
+        setUploadError('Cannot connect to server. Please make sure the backend server is running on http://localhost:3001');
+      } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+        setUploadError('Authentication failed. Please login again.');
+      } else if (error.message.includes('400')) {
+        setUploadError(error.message || 'Invalid request. Please check your file and try again.');
+      } else {
+        setUploadError(error.message || 'Upload failed. Please try again.');
+      }
     } finally {
       setUploading(false);
     }

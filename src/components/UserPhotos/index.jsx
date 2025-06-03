@@ -10,7 +10,7 @@ import {
   Box,
   CircularProgress
 } from "@mui/material";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useFeatures } from "../../context/FeatureContext";
 
 import "./styles.css";
@@ -18,12 +18,16 @@ import { useParams } from "react-router-dom";
 import fetchModel from "../../lib/fetchModelData";
 import CommentInput from "../CommentInput";
 
+const API_BASE_URL = 'http://localhost:3001';
+// const API_BASE_URL = 'https://lpq7hx-3001.csb.app';
+
 /**
  * Define UserPhotos, a React component of Project 4.
  */
 function UserPhotos({ currentUser }) {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { advancedFeaturesEnabled } = useFeatures();
   const [photos, setPhotos] = useState([]);
   const [user, setUser] = useState(null);
@@ -32,7 +36,7 @@ function UserPhotos({ currentUser }) {
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Backend server URL - adjust this based on your backend configuration
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+  const BACKEND_URL = API_BASE_URL;
 
   // Function to get the correct image URL with fallback logic
   const getImageUrl = (fileName) => {
@@ -78,11 +82,15 @@ function UserPhotos({ currentUser }) {
   }, []);
 
   // If advanced features are enabled, redirect to the first photo
+  // If advanced features are disabled while in PhotoViewer, redirect back to photos list
   useEffect(() => {
     if (advancedFeaturesEnabled && photos && photos.length > 0) {
       navigate(`/photos/${userId}/${photos[0]._id}`);
+    } else if (!advancedFeaturesEnabled && location.pathname.includes(`/photos/${userId}/`) && location.pathname.split('/').length > 4) {
+      // If we're currently in PhotoViewer (path has photoId) and advanced features are disabled
+      navigate(`/photos/${userId}`);
     }
-  }, [advancedFeaturesEnabled, userId, photos, navigate]);
+  }, [advancedFeaturesEnabled, userId, photos, navigate, location.pathname]);
 
   // Handle adding a new comment to a specific photo
   const handleCommentAdded = (photoId, newComment) => {
@@ -104,7 +112,7 @@ function UserPhotos({ currentUser }) {
     console.error('Failed to load image from:', currentSrc);
     
     // Try the other source if current one fails
-    if (currentSrc.includes('localhost:3001')) {
+    if (currentSrc.includes(API_BASE_URL)) {
       // If backend failed, try frontend
       console.log('Trying frontend URL:', frontendUrl);
       e.target.src = frontendUrl;

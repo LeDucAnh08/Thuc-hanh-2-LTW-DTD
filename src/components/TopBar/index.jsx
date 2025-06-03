@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { 
   AppBar, 
   Toolbar, 
@@ -6,15 +6,16 @@ import {
   Box,
   FormControlLabel,
   Checkbox,
-  Button
+  Button,
+  Chip
 } from "@mui/material";
-import { PhotoCamera } from "@mui/icons-material";
+import { PhotoCamera, Circle } from "@mui/icons-material";
 import { Link, useLocation } from "react-router-dom";
 
 import "./styles.css";
 import models from "../../modelData/models";
 import { useFeatures } from "../../context/FeatureContext";
-import { postModel } from "../../lib/fetchModelData";
+import { postModel, removeToken, fetchModel } from "../../lib/fetchModelData";
 
 /**
  * Define TopBar, a React component of Project 4.
@@ -22,14 +23,37 @@ import { postModel } from "../../lib/fetchModelData";
 function TopBar({ user, onLogout, onAddPhotoClick }) {
   const location = useLocation();
   const { advancedFeaturesEnabled, toggleAdvancedFeatures } = useFeatures();
+  const [serverStatus, setServerStatus] = useState('checking'); // 'online', 'offline', 'checking'
+  
+  // Check server status
+  useEffect(() => {
+    const checkServerStatus = async () => {
+      try {
+        // Try to fetch user list as a simple health check
+        await fetchModel('/user/list');
+        setServerStatus('online');
+      } catch (error) {
+        console.error('Server check failed:', error);
+        setServerStatus('offline');
+      }
+    };
+
+    checkServerStatus();
+    // Check server status every 30 seconds
+    const interval = setInterval(checkServerStatus, 30000);
+    
+    return () => clearInterval(interval);
+  }, []);
   
   const handleLogout = async () => {
     try {
       await postModel('/admin/logout', {});
-      onLogout();
     } catch (error) {
       console.error('Logout error:', error);
-      // Even if logout fails on server, clear local state
+      // Continue with logout even if server request fails
+    } finally {
+      // Always clear token and logout locally
+      removeToken();
       onLogout();
     }
   };
@@ -65,39 +89,35 @@ function TopBar({ user, onLogout, onAddPhotoClick }) {
   };
 
   return (
-    <AppBar className="topbar-appBar" position="absolute">
+    <AppBar position="fixed" className="cs142-topbar-appBar">
       <Toolbar>
-        <Box display="flex" width="100%" alignItems="center">
-          {/* Left side - Your Name */}
-          <Typography 
-            variant="h5" 
-            color="inherit" 
-            component={Link} 
-            to="/users" 
-            className="app-title"
-          >
-            Bùi Thế Vĩnh Nguyên - B22DCCN588
+        <Box display="flex" alignItems="center" width="100%">
+          <Typography variant="h5" color="inherit" sx={{ flexGrow: 0, marginRight: 2 }}>
+            📸 Photo Sharing App
           </Typography>
-
-          {/* Center - Advanced Features Toggle */}
-          <Box mx={4}>
+          
+          <Box display="flex" alignItems="center" gap={2}>
             <FormControlLabel
               control={
                 <Checkbox
                   checked={advancedFeaturesEnabled}
                   onChange={toggleAdvancedFeatures}
-                  color="default"
+                  sx={{ 
+                    color: 'white',
+                    '&.Mui-checked': {
+                      color: 'rgba(76, 175, 80, 1)',
+                    },
+                  }}
                 />
               }
               label={
-                <Typography color="inherit">
+                <Typography variant="body2" color="inherit">
                   Enable Advanced Features
                 </Typography>
               }
             />
           </Box>
           
-          {/* Right side - User Info and Context */}
           <Box display="flex" alignItems="center" gap={2} sx={{ marginLeft: 'auto' }}>
             {user ? (
               <>
@@ -110,12 +130,13 @@ function TopBar({ user, onLogout, onAddPhotoClick }) {
                   size="small"
                   startIcon={<PhotoCamera />}
                   onClick={onAddPhotoClick}
+                  disabled={serverStatus !== 'online'}
                   sx={{ 
-                    borderColor: 'rgba(76, 175, 80, 0.7)',
-                    color: 'rgba(76, 175, 80, 1)',
+                    borderColor: serverStatus === 'online' ? 'rgba(76, 175, 80, 0.7)' : 'rgba(255, 255, 255, 0.3)',
+                    color: serverStatus === 'online' ? 'rgba(76, 175, 80, 1)' : 'rgba(255, 255, 255, 0.5)',
                     '&:hover': {
-                      borderColor: 'rgba(76, 175, 80, 1)',
-                      backgroundColor: 'rgba(76, 175, 80, 0.1)'
+                      borderColor: serverStatus === 'online' ? 'rgba(76, 175, 80, 1)' : 'rgba(255, 255, 255, 0.3)',
+                      backgroundColor: serverStatus === 'online' ? 'rgba(76, 175, 80, 0.1)' : 'transparent'
                     }
                   }}
                 >

@@ -49,6 +49,10 @@ function UserDetail() {
     return <Typography variant="h5">User not found</Typography>;
   }
 
+  // Get current user from localStorage
+  const currentUser = JSON.parse(localStorage.getItem('user'));
+  const isOwnProfile = currentUser && currentUser._id === user._id;
+
   return (
     <div className="user-detail">
       <Card className="user-card">
@@ -75,6 +79,16 @@ function UserDetail() {
           >
             View Photos
           </Button>
+          {isOwnProfile && (
+            <Button 
+              component={Link} 
+              to={`/profile/${userId}`} 
+              variant="outlined" 
+              color="primary"
+            >
+              Edit Profile
+            </Button>
+          )}
         </CardActions>
       </Card>
     </div>

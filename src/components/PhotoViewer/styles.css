@@ -22,4 +22,32 @@
 
 .comment {
   padding: 16px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.reply {
+  padding: 12px;
+  margin-left: 24px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border-left: 3px solid #1976d2;
+}
+
+.reply:hover {
+  background-color: #f0f2f5;
+}
+
+.reply .MuiTypography-subtitle1 {
+  font-size: 0.9rem;
+  color: #1976d2;
+}
+
+.reply .MuiTypography-body2 {
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.reply .MuiTypography-caption {
+  font-size: 0.8rem;
+  color: #666;
 } 

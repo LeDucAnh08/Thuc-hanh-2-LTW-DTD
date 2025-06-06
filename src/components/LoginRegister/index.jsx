@@ -164,7 +164,6 @@ function LoginRegister({ onLogin }) {
       alignItems="center" 
       minHeight="100vh"
       sx={{ 
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         padding: 2
       }}
     >
@@ -194,11 +193,11 @@ function LoginRegister({ onLogin }) {
               <TextField
                 fullWidth
                 label="Login Name"
-                value={loginForm.login_name}
                 onChange={handleLoginChange('login_name')}
                 placeholder="Enter your login name"
                 disabled={isLoading}
                 autoFocus
+                autoComplete='off'
                 sx={{ mb: 2 }}
               />
               
@@ -206,10 +205,10 @@ function LoginRegister({ onLogin }) {
                 fullWidth
                 type={showLoginPassword ? 'text' : 'password'}
                 label="Password"
-                value={loginForm.password}
                 onChange={handleLoginChange('password')}
                 placeholder="Enter your password"
                 disabled={isLoading}
+                autoComplete='off'
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">

@@ -18,10 +18,10 @@ import "./styles.css";
 /**
  * UserComments component shows all comments made by a specific user
  */
-function UserComments() {
+function UserComments({ currentUser }) {
   const { userId } = useParams();
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(currentUser);
   const [userComments, setUserComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -48,32 +48,48 @@ function UserComments() {
         // Flatten all photos
         const allPhotos = allPhotoLists.flat();
         
-        // Find all comments made by this user
+        // Find all comments made by this user (including replies)
         const comments = [];
         
         allPhotos.forEach(photo => {
           if (photo.comments) {
-            const userCommentsOnPhoto = photo.comments.filter(
-              comment => comment.user._id === userId
-            );
-            
-            // Add photo information to each comment
-            userCommentsOnPhoto.forEach(comment => {
-              comments.push({
-                ...comment,
-                photo: {
-                  _id: photo._id,
-                  file_name: photo.file_name,
-                  user_id: photo.user_id
-                }
-              });
+            // Process top-level comments
+            photo.comments.forEach(comment => {
+              if (comment.user._id === userId) {
+                comments.push({
+                  ...comment,
+                  photo: {
+                    _id: photo._id,
+                    file_name: photo.file_name,
+                    user_id: photo.user_id
+                  }
+                });
+              }
+              
+              // Process replies
+              if (comment.replies) {
+                comment.replies.forEach(reply => {
+                  if (reply.user._id === userId) {
+                    comments.push({
+                      ...reply,
+                      photo: {
+                        _id: photo._id,
+                        file_name: photo.file_name,
+                        user_id: photo.user_id
+                      },
+                      isReply: true,
+                      parentComment: comment.comment
+                    });
+                  }
+                });
+              }
             });
           }
         });
         
         // Sort comments by date (most recent first)
         comments.sort((a, b) => new Date(b.date_time) - new Date(a.date_time));
-        
+        console.log(comments);
         setUserComments(comments);
         setLoading(false);
       })
@@ -133,7 +149,7 @@ function UserComments() {
                     <CardMedia
                       component="img"
                       className="comment-photo-thumbnail"
-                      image={`https://7xxj88-3001.csb.app/images/${comment.photo.file_name}`}
+                      image={`${process.env.PUBLIC_URL}/images/${comment.photo.file_name}`}
                       alt="Photo thumbnail"
                     />
                   </Grid>
@@ -142,6 +158,11 @@ function UserComments() {
                       <Typography variant="h6" component="div" gutterBottom>
                         {formatDate(comment.date_time)}
                       </Typography>
+                      {comment.isReply && (
+                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                          Replying to: {comment.parentComment}
+                        </Typography>
+                      )}
                       <Typography variant="body1" className="comment-text">
                         {comment.comment}
                       </Typography>

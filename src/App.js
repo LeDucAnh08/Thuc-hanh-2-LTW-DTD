@@ -12,6 +12,7 @@ import PhotoViewer from "./components/PhotoViewer";
 import UserComments from "./components/UserComments";
 import LoginRegister from "./components/LoginRegister";
 import PhotoUpload from "./components/PhotoUpload";
+import UserProfile from "./components/UserProfile";
 import { FeatureProvider, useFeatures } from "./context/FeatureContext";
 import { fetchModel, getToken, setToken, removeToken } from "./lib/fetchModelData";
 
@@ -69,10 +70,11 @@ const MainContent = ({ user, onLogout }) => {
                   </Box>
                 } />
                 <Route path="/users/:userId" element={<UserDetail refreshTrigger={refreshTrigger} />} />
+                <Route path="profile/:userId" element={<UserProfile user={user} />} />
                 <Route path="/photos/:userId" element={<UserPhotos refreshTrigger={refreshTrigger} currentUser={user} />} />
                 <Route path="/photos/:userId/:photoId" element={<PhotoViewer currentUser={user} />} />
                 {advancedFeaturesEnabled && (
-                  <Route path="/comments/:userId" element={<UserComments />} />
+                  <Route path="/comments/:userId" element={<UserComments currentUser={JSON.parse(localStorage.getItem('user'))}/>} />
                 )}
               </Routes>
             </Paper>
@@ -124,6 +126,7 @@ const App = () => {
     if (userData.token) {
       setToken(userData.token);
     }
+    localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
   };
 

@@ -101,6 +101,40 @@ async function postModel(url, data) {
   }
 }
 
+async function updateModel(url, data) {
+  try {
+    const token = getToken();
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Add Authorization header if token exists
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    const response = await fetch(`${API_BASE_URL}${url}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(data)
+    });
+    
+    if (!response.ok) {
+      // If unauthorized, remove invalid token
+      if (response.status === 401) {
+        removeToken();
+      }
+      const err = await response.json();
+      throw new Error(err.error || `Request failed with status ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Post error:', error);
+    throw error;
+  }
+}
+
 /**
  * postModelWithFile - Send a POST request with file upload.
  *
@@ -141,5 +175,5 @@ async function postModelWithFile(url, formData) {
   }
 }
 
-export { fetchModel, postModel, postModelWithFile, getToken, setToken, removeToken };
+export { fetchModel, postModel, updateModel, postModelWithFile, getToken, setToken, removeToken };
 export default fetchModel;

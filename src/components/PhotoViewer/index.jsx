@@ -29,7 +29,7 @@ function PhotoViewer({ currentUser }) {
   const navigate = useNavigate();
   const { advancedFeaturesEnabled } = useFeatures();
   const [photos, setPhotos] = useState([]);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(currentUser);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -78,9 +78,10 @@ function PhotoViewer({ currentUser }) {
 
   useEffect(() => {
     setLoading(true);
-    // Fetch photos
+    // Fetch photos with comments
     fetchModel(`/photosOfUser/${userId}`)
       .then(data => {
+        console.log('Fetched photos data:', data);
         setPhotos(data);
         return fetchModel(`/user/${userId}`);
       })
@@ -104,12 +105,37 @@ function PhotoViewer({ currentUser }) {
 
   // Handle adding a new comment to the current photo
   const handleCommentAdded = (newComment) => {
+    console.log('New comment added:', newComment);
     setPhotos(prevPhotos => 
-      prevPhotos.map(photo => 
-        photo._id === photoId 
-          ? { ...photo, comments: [...photo.comments, newComment] }
-          : photo
-      )
+      prevPhotos.map(photo => {
+        if (photo._id === photoId) {
+          // If it's a reply (has parent_id)
+          if (newComment.parent_id) {
+            const updatedPhoto = {
+              ...photo,
+              comments: photo.comments.map(comment => {
+                if (comment._id === newComment.parent_id) {
+                  return {
+                    ...comment,
+                    replies: [...(comment.replies || []), newComment]
+                  };
+                }
+                return comment;
+              })
+            };
+            console.log('Updated photo with reply:', updatedPhoto);
+            return updatedPhoto;
+          }
+          // If it's a new top-level comment
+          const updatedPhoto = {
+            ...photo,
+            comments: [...photo.comments, { ...newComment, replies: [] }]
+          };
+          console.log('Updated photo with new comment:', updatedPhoto);
+          return updatedPhoto;
+        }
+        return photo;
+      })
     );
   };
 
@@ -227,50 +253,100 @@ function PhotoViewer({ currentUser }) {
 
             {currentPhoto.comments && currentPhoto.comments.length > 0 ? (
               <div className="comments-section">
-                {currentPhoto.comments.map((comment) => (
-                  <Box key={comment._id} className="comment" mb={2}>
-                    <Typography variant="h6" component="div">
-                      <Link
-                        to={`/users/${comment.user._id}`}
-                        style={{
-                          textDecoration: "none",
-                          color: "primary.main",
+                {currentPhoto.comments.map((comment) => {
+                  // Skip comments that are replies (they should be shown under their parent)
+                  if (comment.parent_id) return null;
+                  
+                  return (
+                    <Box key={comment._id} className="comment" mb={2}>
+                      <Typography variant="h6" component="div">
+                        <Link
+                          to={`/users/${comment.user._id}`}
+                          style={{
+                            textDecoration: "none",
+                            color: "primary.main",
+                          }}
+                        >
+                          {comment.user.first_name} {comment.user.last_name}
+                        </Link>
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          fontSize: "1.1rem",
+                          my: 1,
                         }}
                       >
-                        {comment.user.first_name} {comment.user.last_name}
-                      </Link>
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        fontSize: "1.1rem",
-                        my: 1,
-                      }}
-                    >
-                      {comment.comment}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {formatDate(comment.date_time)}
-                    </Typography>
-                    <Divider sx={{ mt: 2 }} />
-                  </Box>
-                ))}
+                        {comment.comment}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {formatDate(comment.date_time)}
+                      </Typography>
+
+                      {/* Replies section */}
+                      {comment.replies && comment.replies.length > 0 && (
+                        <Box ml={4} mt={1}>
+                          {comment.replies
+                            .filter(reply => reply && reply._id) // Filter out null or invalid replies
+                            .map((reply) => (
+                              <Box key={reply._id} className="reply" mb={1}>
+                                <Typography variant="subtitle1" component="div">
+                                  <Link
+                                    to={`/users/${reply.user._id}`}
+                                    style={{
+                                      textDecoration: "none",
+                                      color: "primary.main",
+                                    }}
+                                  >
+                                    {reply.user.first_name} {reply.user.last_name}
+                                  </Link>
+                                </Typography>
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    fontSize: "1rem",
+                                    my: 0.5,
+                                  }}
+                                >
+                                  {reply.comment}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {formatDate(reply.date_time)}
+                                </Typography>
+                              </Box>
+                            ))}
+                        </Box>
+                      )}
+
+                      {/* Reply input for this comment */}
+                      <Box ml={4} mt={1}>
+                        <CommentInput
+                          photoId={currentPhoto._id}
+                          onCommentAdded={handleCommentAdded}
+                          parentId={comment._id}
+                          placeholder="Write a reply..."
+                          currentUser={JSON.parse(localStorage.getItem('user'))}
+                        />
+                      </Box>
+                    </Box>
+                  );
+                })}
               </div>
             ) : (
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                No comments on this photo yet. Be the first to comment!
+              <Typography variant="body1" color="text.secondary">
+                No comments yet. Be the first to comment!
               </Typography>
             )}
-          </Box>
 
-          {/* Comment Input Section */}
-          {currentUser && (
-            <CommentInput
-              photoId={currentPhoto._id}
-              currentUser={currentUser}
-              onCommentAdded={handleCommentAdded}
-            />
-          )}
+            {/* Main comment input */}
+            <Box mt={3}>
+              <CommentInput
+                photoId={currentPhoto._id}
+                onCommentAdded={handleCommentAdded}
+                currentUser={JSON.parse(localStorage.getItem('user'))}
+              />
+            </Box>
+          </Box>
         </CardContent>
       </Card>
     </Container>

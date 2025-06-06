@@ -12,7 +12,7 @@ import { Send as SendIcon } from '@mui/icons-material';
 import { postModel } from '../../lib/fetchModelData';
 import './styles.css';
 
-function CommentInput({ photoId, onCommentAdded, currentUser }) {
+function CommentInput({ photoId, onCommentAdded, currentUser, parentId, placeholder }) {
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -30,7 +30,8 @@ function CommentInput({ photoId, onCommentAdded, currentUser }) {
 
     try {
       const newComment = await postModel(`/commentsOfPhoto/${photoId}`, {
-        comment: comment.trim()
+        comment: comment.trim(),
+        parent_id: parentId || null
       });
       
       // Clear the input
@@ -49,7 +50,7 @@ function CommentInput({ photoId, onCommentAdded, currentUser }) {
   return (
     <Paper elevation={1} sx={{ p: 2, mt: 2, backgroundColor: '#f8f9fa' }}>
       <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
-        Add a Comment
+        {parentId ? 'Add a Reply' : 'Add a Comment'}
       </Typography>
       
       <Box component="form" onSubmit={handleSubmit}>
@@ -59,7 +60,7 @@ function CommentInput({ photoId, onCommentAdded, currentUser }) {
           rows={3}
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          placeholder={`What do you think about this photo, ${currentUser?.first_name}?`}
+          placeholder={placeholder || `What do you think about this photo, ${currentUser?.first_name}?`}
           disabled={isSubmitting}
           variant="outlined"
           sx={{ mb: 2 }}
@@ -83,7 +84,7 @@ function CommentInput({ photoId, onCommentAdded, currentUser }) {
             startIcon={isSubmitting ? <CircularProgress size={16} /> : <SendIcon />}
             sx={{ minWidth: 120 }}
           >
-            {isSubmitting ? 'Posting...' : 'Post Comment'}
+            {isSubmitting ? 'Posting...' : parentId ? 'Post Reply' : 'Post Comment'}
           </Button>
         </Box>
       </Box>
